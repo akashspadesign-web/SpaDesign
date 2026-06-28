@@ -1,0 +1,61 @@
+// SPA — Lead capture.
+// Datasource is SQLite for local dev. To switch to Postgres / Supabase
+// in production, change `provider` to "postgresql" and update DATABASE_URL.
+// Note: SQLite has no native enums; `status` is a String column validated
+// by zod at the application layer (see lib/leadSchema.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  projectType String
+  budget      String?
+  location    String?
+  message     String
+  /// One of: NEW | CONTACTED | IN_PROGRESS | CLOSED
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  /// One of the fixed PROJECT_CATEGORIES strings (see lib/projects.ts).
+  category    String
+  location    String
+  area        String   @default("")
+  /// One of: Completed | Under Construction | Proposed
+  status      String   @default("Completed")
+  description String   @default("")
+  image       String
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+  @@index([createdAt])
+}
+
+/// Generic key/value bag for editable site-wide settings (e.g. founder photo).
+/// Keys are well-known strings defined in lib/settings-repo.ts.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
